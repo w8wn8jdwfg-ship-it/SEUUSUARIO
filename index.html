@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#008b70">
+  <title>Pague com Pix</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f1f5f4;
+      margin: 0;
+      padding: 24px 16px;
+      color: #18352d;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    main {
+      width: 100%;
+      max-width: 390px;
+      margin: 20px auto;
+      background: #ffffff;
+      padding: 28px 24px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    .pix {
+      color: #008b70;
+      font-size: 34px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 23px;
+      margin: 8px 0 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .descricao {
+      font-size: 15px;
+      line-height: 1.5;
+      color: #53665f;
+    }
+
+    .key {
+      background: #f2f5f4;
+      padding: 15px;
+      border-radius: 12px;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      margin: 20px 0 14px;
+      font-size: 15px;
+      line-height: 1.5;
+      border: 1px solid #e0e9e5;
+      user-select: text;
+      cursor: text;
+    }
+
+    button {
+      background: #008b70;
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 10px;
+      width: 100%;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      touch-action: manipulation;
+    }
+
+    button:hover {
+      background: #006f59;
+    }
+
+    button:focus-visible {
+      outline: 3px solid #74cdb7;
+      outline-offset: 3px;
+    }
+
+    button:disabled {
+      opacity: 0.7;
+      cursor: wait;
+    }
+
+    #status {
+      min-height: 24px;
+      font-size: 14px;
+      line-height: 1.5;
+      margin: 14px 0 8px;
+      color: #00765f;
+      overflow-wrap: anywhere;
+    }
+
+    .aviso {
+      display: block;
+      color: #68766f;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-top: 12px;
+    }
+
+    .instrucoes {
+      font-size: 13px;
+      color: #53665f;
+      margin-top: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <div class="pix" aria-label="Pix">Pix</div>
+
+    <h1 id="nome">Nome do estabelecimento</h1>
+
+    <p class="descricao">
+      Copie a chave Pix abaixo para realizar o pagamento.
+    </p>
+
+    <div
+      class="key"
+      id="chave"
+      role="textbox"
+      aria-label="Chave Pix"
+      aria-readonly="true"
+      tabindex="0"
+    >Carregando chave Pix...</div>
+
+    <button type="button" id="copiar">
+      COPIAR CHAVE PIX
+    </button>
+
+    <p id="status" role="status" aria-live="polite"></p>
+
+    <p class="instrucoes" id="instrucoes">
+      Se a cópia automática não funcionar, selecione a chave acima e copie-a.
+    </p>
+
+    <small class="aviso">
+      Confira o nome do destinatário no aplicativo do banco antes de confirmar o pagamento.
+    </small>
+  </main>
+
+  <script>
+    // EDITE ESTES DOIS CAMPOS COM SEUS DADOS
+    const NOME = "NOME DO ESTABELECIMENTO";
+    const CHAVE_PIX = "COLOQUE_A_CHAVE_PIX_AQUI";
+
+    const nome = document.getElementById("nome");
+    const chave = document.getElementById("chave");
+    const botao = document.getElementById("copiar");
+    const status = document.getElementById("status");
+    const instrucoes = document.getElementById("instrucoes");
+
+    nome.textContent = NOME;
+    chave.textContent = CHAVE_PIX;
+
+    async function copiarChave() {
+      if (
+        !CHAVE_PIX ||
+        CHAVE_PIX === "COLOQUE_A_CHAVE_PIX_AQUI"
+      ) {
+        status.textContent =
+          "Configure sua chave Pix no código antes de publicar.";
+        return;
+      }
+
+      status.textContent = "";
+
+      // Primeira tentativa: API de área de transferência
+      try {
+        if (
+          navigator.clipboard &&
+          window.isSecureContext
+        ) {
+          await navigator.clipboard.writeText(CHAVE_PIX);
+          status.textContent = "Chave Pix copiada! Agora cole no aplicativo do banco.";
+          return;
+        }
+      } catch (erro) {
+        // Tenta a alternativa abaixo.
+      }
+
+      // Alternativa: selecionar o texto para cópia manual
+      try {
+        const selecao = window.getSelection();
+        const intervalo = document.createRange();
+
+        intervalo.selectNodeContents(chave);
+        selecao.removeAllRanges();
+        selecao.addRange(intervalo);
+
+        status.textContent =
+          "A chave está selecionada. Toque em Copiar no menu do seu celular ou use Ctrl+C.";
+      } catch (erro) {
+        status.textContent =
+          "Selecione manualmente a chave Pix acima e copie-a.";
+      }
+
+      chave.focus();
+    }
+
+    botao.addEventListener("click", copiarChave);
+
+    chave.addEventListener("click", () => {
+      status.textContent =
+        "Selecione o texto da chave para copiá-lo manualmente.";
+    });
+  </script>
+</body>
+</html>
